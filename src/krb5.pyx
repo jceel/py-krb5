@@ -26,7 +26,7 @@
 #
 #####################################################################
 
-import os
+import tempfile
 from libc.stdlib cimport free
 cimport defs
 
@@ -55,10 +55,18 @@ cdef class Keytab(object):
     cdef Context context
     cdef defs.krb5_keytab keytab
 
-    def __init__(self, context, name):
+    def __init__(self, context, name=None, contents=None):
         self.context = context
 
-        ret = defs.krb5_kt_resolve(self.context.context, name, &self.keytab)
+        if name:
+            ret = defs.krb5_kt_resolve(self.context.context, path, &self.keytab)
+
+        if contents:
+            with tempfile.NamedTemporaryFile() as f:
+                f.file.write(contents)
+                f.file.flush()
+                ret = defs.krb5_kt_resolve(self.context.context, f.name, &self.keytab)
+
         if ret != 0:
             raise KrbException(self.context.error_message(ret))
 
