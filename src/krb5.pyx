@@ -59,7 +59,7 @@ cdef class Keytab(object):
         self.context = context
 
         if name:
-            ret = defs.krb5_kt_resolve(self.context.context, path, &self.keytab)
+            ret = defs.krb5_kt_resolve(self.context.context, name, &self.keytab)
 
         if contents:
             with tempfile.NamedTemporaryFile() as f:
