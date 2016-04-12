@@ -54,10 +54,10 @@ cdef class Context(object):
 cdef class Keytab(object):
     cdef Context context
     cdef defs.krb5_keytab keytab
+    cdef object tempfile
 
     def __init__(self, context, name=None, contents=None):
         self.context = context
-        self.tempfile = None
 
         if name:
             ret = defs.krb5_kt_resolve(self.context.context, name, &self.keytab)
@@ -78,9 +78,6 @@ cdef class Keytab(object):
         return str(self)
 
     def __dealloc__(self):
-        if self.tempfile:
-            self.tempfile.close()
-
         if <void *>self.keytab != NULL:
             defs.krb5_kt_close(self.context.context, self.keytab)
 
