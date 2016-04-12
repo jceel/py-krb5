@@ -63,6 +63,14 @@ cdef extern from "krb5.h":
     krb5_error_code krb5_init_context(
         krb5_context *)
 
+    const char *krb5_get_error_message(
+    	krb5_context,
+    	krb5_error_code)
+
+    void krb5_free_error_message(
+    	krb5_context,
+    	const char *)
+
     krb5_error_code krb5_unparse_name(
     	krb5_context,
     	krb5_const_principal,

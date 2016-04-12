@@ -43,7 +43,12 @@ cdef class Context(object):
             raise RuntimeError()
 
     def error_message(self, code):
-        return os.strerror(code)
+        cdef const char *msg;
+
+        msg = defs.krb5_get_error_message(self.context, code)
+        ret = msg
+        defs.krb5_free_error_message(self.context, msg)
+        return ret
 
 
 cdef class Keytab(object):
