@@ -57,15 +57,16 @@ cdef class Keytab(object):
 
     def __init__(self, context, name=None, contents=None):
         self.context = context
+        self.tempfile = None
 
         if name:
             ret = defs.krb5_kt_resolve(self.context.context, name, &self.keytab)
 
         if contents:
-            with tempfile.NamedTemporaryFile() as f:
-                f.file.write(contents)
-                f.file.flush()
-                ret = defs.krb5_kt_resolve(self.context.context, f.name, &self.keytab)
+            self.tempfile = tempfile.NamedTemporaryFile()
+            self.tempfile.file.write(contents)
+            self.tempfile.file.flush()
+            ret = defs.krb5_kt_resolve(self.context.context, self.tempfile.name, &self.keytab)
 
         if ret != 0:
             raise KrbException(self.context.error_message(ret))
@@ -77,6 +78,9 @@ cdef class Keytab(object):
         return str(self)
 
     def __dealloc__(self):
+        if self.tempfile:
+            self.tempfile.close()
+
         if <void *>self.keytab != NULL:
             defs.krb5_kt_close(self.context.context, self.keytab)
 
