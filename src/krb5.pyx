@@ -106,6 +106,15 @@ cdef class Keytab(object):
         ke.entry = entry
         return ke
 
+    def clear(self):
+        cdef KeytabEntry ke
+
+        for i in self.entries:
+            ke = <KeytabEntry>i
+            ret = defs.krb5_kt_remove_entry(self.context.context, self.keytab, &ke.entry)
+            if ret != 0:
+                raise KrbException(self.context.error_message(ret))
+
     def add(self, KeytabEntry entry):
         ret = defs.krb5_kt_add_entry(self.context.context, self.keytab, &entry.entry)
         if ret != 0:
