@@ -139,7 +139,7 @@ cdef class Keytab(object):
 
             ret = defs.krb5_kt_start_seq_get(self.context.context, self.keytab, &cursor)
             if ret != 0:
-                raise KrbException(self.context.error_message(ret))
+                return
 
             while True:
                 if defs.krb5_kt_next_entry(self.context.context, self.keytab, &entry, &cursor) != 0:
