@@ -27,6 +27,7 @@
 #####################################################################
 
 import tempfile
+from datetime import datetime
 from libc.stdlib cimport free
 cimport defs
 
@@ -49,6 +50,100 @@ cdef class Context(object):
         ret = msg
         defs.krb5_free_error_message(self.context, msg)
         return ret
+
+
+cdef class CredentialsCache(object):
+    cdef Context context
+    cdef defs.krb5_ccache ccache
+
+    def __init__(self, context, name=None):
+        self.context = context
+
+        ret = defs.krb5_cc_resolve(self.context.context, name, &self.ccache)
+        if ret != 0:
+            raise KrbException(self.context.error_message(ret))
+
+    property principal:
+        def __get__(self):
+            cdef defs.krb5_principal principal
+
+            ret = defs.krb5_cc_get_principal(self.context.context, self.ccache, &principal)
+            if ret != 0:
+                raise KrbException(self.context.error_message(ret))
+
+    property entries:
+        def __get__(self):
+            cdef Credential cred
+            cdef defs.krb5_cc_cursor cursor
+            cdef defs.krb5_creds creds
+
+            ret = defs.krb5_cc_start_seq_get(self.context.context, self.ccache, &cursor)
+            if ret != 0:
+                return
+
+            while True:
+                if defs.krb5_cc_next_cred(self.context.context, self.ccache, &cursor, &creds) != 0:
+                    break
+
+                cred = Credential.__new__(Credential)
+                cred.context = self.context
+                cred.cache = self
+                cred.creds = creds
+                yield cred
+
+            ret = defs.krb5_cc_end_seq_get(self.context.context, self.ccache, &cursor)
+            if ret != 0:
+                raise KrbException(self.context.error_message(ret))
+
+
+cdef class Credential(object):
+    cdef Context context
+    cdef CredentialsCache cache
+    cdef defs.krb5_creds creds
+
+    def __str__(self):
+        return "<krb5.Credential server '{0}' starttime '{1}'>".format(self.server, self.starttime)
+
+    def __repr__(self):
+        return str(self)
+
+    property client:
+        def __get__(self):
+            cdef char *str
+
+            ret = defs.krb5_unparse_name(self.context.context, self.creds.client, &str)
+            result = str
+            free(str)
+            return result
+
+    property server:
+        def __get__(self):
+            cdef char *str
+
+            ret = defs.krb5_unparse_name(self.context.context, self.creds.server, &str)
+            result = str
+            free(str)
+            return result
+
+    property type:
+        def __get__(self):
+            pass
+
+    property authtime:
+        def __get__(self):
+            return datetime.fromtimestamp(self.creds.times.authtime)
+
+    property starttime:
+        def __get__(self):
+            return datetime.fromtimestamp(self.creds.times.starttime)
+
+    property endtime:
+        def __get__(self):
+            return datetime.fromtimestamp(self.creds.times.endtime)
+
+    property renew_till:
+        def __get__(self):
+            return datetime.fromtimestamp(self.creds.times.renew_till)
 
 
 cdef class Keytab(object):
@@ -177,7 +272,7 @@ cdef class KeytabEntry(object):
         def __get__(self):
             cdef char *principal
 
-            ret = defs.krb5_unparse_name(self.context.context, self.entry.principal, &principal)
+            ret = defs.krb5_unparse_name(self.context.context, <defs.krb5_pointer>self.entry.principal, &principal)
             if ret != 0:
                 raise KrbException(self.context.error_message(ret))
 

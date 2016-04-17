@@ -26,6 +26,7 @@
 #####################################################################
 
 from libc.stdint cimport *
+from posix.types cimport time_t
 
 
 cdef extern from "krb5.h":
@@ -43,6 +44,8 @@ cdef extern from "krb5.h":
 
     ctypedef int krb5_kvno
 
+    ctypedef char * krb5_pointer
+    ctypedef time_t krb5_timestamp
     ctypedef krb5_principal_data krb5_principal
     ctypedef const krb5_principal_data *krb5_const_principal
 
@@ -60,20 +63,37 @@ cdef extern from "krb5.h":
     ctypedef struct krb5_kt_cursor:
         pass
 
+    ctypedef struct krb5_ccache:
+        pass
+
+    ctypedef struct krb5_ticket_times:
+        krb5_timestamp authtime
+        krb5_timestamp starttime
+        krb5_timestamp endtime
+        krb5_timestamp renew_till
+
+    ctypedef struct krb5_creds:
+        krb5_pointer client
+        krb5_pointer server
+        krb5_ticket_times times
+
+    ctypedef struct krb5_cc_cursor:
+        pass
+
     krb5_error_code krb5_init_context(
         krb5_context *)
 
     const char *krb5_get_error_message(
-    	krb5_context,
-    	krb5_error_code)
+        krb5_context,
+        krb5_error_code)
 
     void krb5_free_error_message(
-    	krb5_context,
-    	const char *)
+        krb5_context,
+        const char *)
 
     krb5_error_code krb5_unparse_name(
-    	krb5_context,
-    	krb5_const_principal,
+        krb5_context,
+        krb5_pointer,
         char **);
 
     krb5_error_code krb5_parse_name(
@@ -82,14 +102,14 @@ cdef extern from "krb5.h":
         krb5_principal *)
 
     krb5_error_code krb5_enctype_to_string(
-    	krb5_context,
-    	krb5_enctype,
-    	char **)
+        krb5_context,
+        krb5_enctype,
+        char **)
 
     krb5_error_code krb5_string_to_enctype(
         krb5_context,
-    	const char *,
-    	krb5_enctype *)
+        const char *,
+        krb5_enctype *)
 
     krb5_error_code krb5_kt_add_entry(
         krb5_context,
@@ -99,92 +119,119 @@ cdef extern from "krb5.h":
     krb5_error_code krb5_kt_close(
         krb5_context,
         krb5_keytab)
-    
+
     krb5_boolean krb5_kt_compare(
         krb5_context,
         krb5_keytab_entry,
-        krb5_const_principal, 
+        krb5_const_principal,
         krb5_kvno,
         krb5_enctype)
-    
+
     krb5_error_code krb5_kt_copy_entry_contents(
-    	krb5_context,
-    	const krb5_keytab_entry *,
-    	krb5_keytab_entry *)
+        krb5_context,
+        const krb5_keytab_entry *,
+        krb5_keytab_entry *)
 
     krb5_error_code krb5_kt_default(
-    	krb5_context,
-    	krb5_keytab *)
+        krb5_context,
+        krb5_keytab *)
 
     krb5_error_code krb5_kt_default_modify_name(
-    	krb5_context,
-    	char *,
-    	size_t)
+        krb5_context,
+        char *,
+        size_t)
 
     krb5_error_code krb5_kt_default_name(
-    	krb5_context,
-    	char *,
-    	size_t)
+        krb5_context,
+        char *,
+        size_t)
 
     krb5_error_code krb5_kt_destroy(
-    	krb5_context,
-    	krb5_keytab)
+        krb5_context,
+        krb5_keytab)
 
     krb5_error_code krb5_kt_end_seq_get(
-    	krb5_context,
-    	krb5_keytab,
-    	krb5_kt_cursor *)
+        krb5_context,
+        krb5_keytab,
+        krb5_kt_cursor *)
 
     krb5_error_code krb5_kt_free_entry(
-    	krb5_context,
-    	krb5_keytab_entry *)
+        krb5_context,
+        krb5_keytab_entry *)
 
     krb5_error_code krb5_kt_get_entry(
-    	krb5_context,
-    	krb5_keytab,
-    	krb5_const_principal,
-    	krb5_kvno,
-    	krb5_enctype,
-    	krb5_keytab_entry *)
+        krb5_context,
+        krb5_keytab,
+        krb5_const_principal,
+        krb5_kvno,
+        krb5_enctype,
+        krb5_keytab_entry *)
 
     krb5_error_code krb5_kt_get_full_name(
-    	krb5_context,
-    	krb5_keytab,
-    	char **)
+        krb5_context,
+        krb5_keytab,
+        char **)
 
     krb5_error_code krb5_kt_get_name(
-    	krb5_context,
-    	krb5_keytab,
-    	char *,
-    	size_t)
+        krb5_context,
+        krb5_keytab,
+        char *,
+        size_t)
 
     krb5_error_code krb5_kt_get_type(
-    	krb5_context,
-    	krb5_keytab,
-    	char *,
-    	size_t)
+        krb5_context,
+        krb5_keytab,
+        char *,
+        size_t)
 
     krb5_boolean krb5_kt_have_content(
-    	krb5_context,
-    	krb5_keytab)
+        krb5_context,
+        krb5_keytab)
 
     krb5_error_code krb5_kt_next_entry(
-    	krb5_context,
-    	krb5_keytab,
-    	krb5_keytab_entry *,
-    	krb5_kt_cursor *)
+        krb5_context,
+        krb5_keytab,
+        krb5_keytab_entry *,
+        krb5_kt_cursor *)
 
     krb5_error_code krb5_kt_remove_entry(
-    	krb5_context,
-    	krb5_keytab,
-    	krb5_keytab_entry *)
+        krb5_context,
+        krb5_keytab,
+        krb5_keytab_entry *)
 
     krb5_error_code krb5_kt_resolve(
-    	krb5_context,
-    	const char *,
-    	krb5_keytab *)
+        krb5_context,
+        const char *,
+        krb5_keytab *)
 
     krb5_error_code krb5_kt_start_seq_get(
-    	krb5_context,
-    	krb5_keytab,
-    	krb5_kt_cursor *)
+        krb5_context,
+        krb5_keytab,
+        krb5_kt_cursor *)
+
+    krb5_error_code krb5_cc_resolve(
+        krb5_context,
+        const char *,
+        krb5_ccache *)
+
+    krb5_error_code krb5_cc_start_seq_get(
+        krb5_context,
+        const krb5_ccache,
+        krb5_cc_cursor *)
+
+    krb5_error_code krb5_cc_next_cred(
+        krb5_context,
+        const krb5_ccache,
+        krb5_cc_cursor *,
+        krb5_creds *)
+
+    krb5_error_code krb5_cc_end_seq_get(
+        krb5_context,
+        const krb5_ccache,
+        krb5_cc_cursor *)
+
+    krb5_error_code krb5_cc_get_principal(
+        krb5_context,
+        krb5_ccache,
+        krb5_principal *)
+
