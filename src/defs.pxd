@@ -44,8 +44,10 @@ cdef extern from "krb5.h":
 
     ctypedef int krb5_kvno
 
+    ctypedef void * krb5_prompter_fct
     ctypedef char * krb5_pointer
     ctypedef time_t krb5_timestamp
+    ctypedef time_t krb5_deltat
     ctypedef krb5_principal_data krb5_principal
     ctypedef const krb5_principal_data *krb5_const_principal
 
@@ -78,6 +80,9 @@ cdef extern from "krb5.h":
         krb5_ticket_times times
 
     ctypedef struct krb5_cc_cursor:
+        pass
+
+    ctypedef struct krb5_get_init_creds_opt:
         pass
 
     krb5_error_code krb5_init_context(
@@ -214,6 +219,12 @@ cdef extern from "krb5.h":
         const char *,
         krb5_ccache *)
 
+    krb5_error_code krb5_cc_new_unique(
+        krb5_context,
+        const char *,
+        const char *,
+        krb5_ccache *)
+
     krb5_error_code krb5_cc_start_seq_get(
         krb5_context,
         const krb5_ccache,
@@ -235,3 +246,32 @@ cdef extern from "krb5.h":
         krb5_ccache,
         krb5_principal *)
 
+    krb5_error_code krb5_get_init_creds_password(
+        krb5_context,
+        krb5_creds *,
+        krb5_principal,
+        const char *,
+        krb5_prompter_fct,
+        void *,
+        krb5_deltat,
+        const char *,
+        krb5_get_init_creds_opt *)
+
+    krb5_error_code krb5_get_init_creds_keytab(
+        krb5_context,
+        krb5_creds *,
+        krb5_principal,
+        krb5_keytab,
+        krb5_deltat,
+        const char *,
+        krb5_get_init_creds_opt *)
+
+    krb5_error_code krb5_cc_store_cred(
+        krb5_context,
+        krb5_ccache,
+        krb5_creds *)
+
+    krb5_error_code krb5_cc_initialize(
+        krb5_context context,
+        krb5_ccache cache,
+        krb5_principal principal)

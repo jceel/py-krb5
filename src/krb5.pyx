@@ -51,6 +51,30 @@ cdef class Context(object):
         defs.krb5_free_error_message(self.context, msg)
         return ret
 
+    def obtain_tgt_password(self, principal, password, start_time=None, service=None):
+        cdef Credential cred
+        cdef defs.krb5_creds creds
+        cdef defs.krb5_principal princ
+
+        ret = defs.krb5_parse_name(self.context, principal, &princ)
+        if ret != 0:
+            raise KrbException(self.error_message(ret))
+
+        ret = defs.krb5_get_init_creds_password(
+            self.context, &creds, princ, password,
+            NULL, NULL, start_time, service, NULL
+        )
+        if ret != 0:
+            raise KrbException(self.error_message(ret))
+
+        cred = Credential.__new__(Credential)
+        cred.context = self
+        cred.creds = creds
+        return cred
+
+    def obtain_tgt_keytab(self, principal, keytab):
+        pass
+
 
 cdef class CredentialsCache(object):
     cdef Context context
@@ -60,6 +84,15 @@ cdef class CredentialsCache(object):
         self.context = context
 
         ret = defs.krb5_cc_resolve(self.context.context, name, &self.ccache)
+        if ret != 0:
+            raise KrbException(self.context.error_message(ret))
+
+    def add(self, Credential cred):
+        ret = defs.krb5_cc_initialize(self.context.context, self.ccache, <defs.krb5_principal>cred.creds.client)
+        if ret != 0:
+            raise KrbException(self.context.error_message(ret))
+
+        ret = defs.krb5_cc_store_cred(self.context.context, self.ccache, &cred.creds)
         if ret != 0:
             raise KrbException(self.context.error_message(ret))
 
