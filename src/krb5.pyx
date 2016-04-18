@@ -62,7 +62,7 @@ cdef class Context(object):
 
         ret = defs.krb5_get_init_creds_password(
             self.context, &creds, princ, password,
-            NULL, NULL, start_time, service, NULL
+            NULL, NULL, start_time or 0, service or <const char *>NULL, NULL
         )
         if ret != 0:
             raise KrbException(self.error_message(ret))
@@ -83,7 +83,11 @@ cdef class CredentialsCache(object):
     def __init__(self, context, name=None):
         self.context = context
 
-        ret = defs.krb5_cc_resolve(self.context.context, name, &self.ccache)
+        if not name:
+            ret = defs.krb5_cc_default(self.context.context, &self.ccache)
+        else:
+            ret = defs.krb5_cc_resolve(self.context.context, name, &self.ccache)
+
         if ret != 0:
             raise KrbException(self.context.error_message(ret))
 

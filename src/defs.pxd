@@ -219,6 +219,10 @@ cdef extern from "krb5.h":
         const char *,
         krb5_ccache *)
 
+    krb5_error_code krb5_cc_default(
+        krb5_context context,
+        krb5_ccache * ccache)
+
     krb5_error_code krb5_cc_new_unique(
         krb5_context,
         const char *,
