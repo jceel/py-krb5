@@ -56,7 +56,7 @@ cdef class Context(object):
         cdef defs.krb5_creds creds
         cdef defs.krb5_principal princ
         cdef const char *c_password = password
-        cdef const char *c_service = service or NULL
+        cdef const char *c_service = service or <const char *>NULL
         cdef int c_start_time = start_time or 0
         cdef int ret
 
