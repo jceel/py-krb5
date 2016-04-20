@@ -29,7 +29,7 @@ from libc.stdint cimport *
 from posix.types cimport time_t
 
 
-cdef extern from "krb5.h":
+cdef extern from "krb5.h" nogil:
     ctypedef uint32_t krb5_error_code
     ctypedef int krb5_boolean
 

@@ -55,15 +55,20 @@ cdef class Context(object):
         cdef Credential cred
         cdef defs.krb5_creds creds
         cdef defs.krb5_principal princ
+        cdef const char *c_password = password
+        cdef const char *c_service = service or NULL
+        cdef int c_start_time = start_time or 0
+        cdef int ret
 
         ret = defs.krb5_parse_name(self.context, principal, &princ)
         if ret != 0:
             raise KrbException(self.error_message(ret))
 
-        ret = defs.krb5_get_init_creds_password(
-            self.context, &creds, princ, password,
-            NULL, NULL, start_time or 0, service or <const char *>NULL, NULL
-        )
+        with nogil:
+            ret = defs.krb5_get_init_creds_password(
+                self.context, &creds, princ, c_password,
+                NULL, NULL, c_start_time, c_service, NULL
+            )
         if ret != 0:
             raise KrbException(self.error_message(ret))
 
