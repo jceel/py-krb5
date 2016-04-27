@@ -215,6 +215,14 @@ cdef class Credential(object):
         def __get__(self):
             return datetime.fromtimestamp(self.creds.times.renew_till)
 
+    property expired:
+        def __get__(self):
+            return datetime.utcnow() < self.endtime
+
+    property renew_possible:
+        def __get__(self):
+            return datetime.utcnow() < self.renew_till
+
 
 cdef class Keytab(object):
     cdef Context context
