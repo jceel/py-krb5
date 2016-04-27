@@ -217,11 +217,11 @@ cdef class Credential(object):
 
     property expired:
         def __get__(self):
-            return datetime.utcnow() < self.endtime
+            return datetime.utcnow() > self.endtime
 
     property renew_possible:
         def __get__(self):
-            return datetime.utcnow() < self.renew_till
+            return datetime.utcnow() > self.renew_till
 
 
 cdef class Keytab(object):
