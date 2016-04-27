@@ -270,6 +270,17 @@ cdef extern from "krb5.h" nogil:
         const char *,
         krb5_get_init_creds_opt *)
 
+    krb5_error_code krb5_get_init_creds_opt_set_renew_life(
+        krb5_get_init_creds_opt *,
+        krb5_deltat)
+
+    krb5_error_code krb5_get_renewed_creds(
+        krb5_context,
+        krb5_creds *,
+        krb5_principal,
+        krb5_ccache,
+        const char *)
+
     krb5_error_code krb5_cc_store_cred(
         krb5_context,
         krb5_ccache,

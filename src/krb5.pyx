@@ -51,10 +51,11 @@ cdef class Context(object):
         defs.krb5_free_error_message(self.context, msg)
         return ret
 
-    def obtain_tgt_password(self, principal, password, start_time=None, service=None):
+    def obtain_tgt_password(self, principal, password, start_time=None, service=None, renew_life=None):
         cdef Credential cred
         cdef defs.krb5_creds creds
         cdef defs.krb5_principal princ
+        cdef defs.krb5_get_init_creds_opt opt
         cdef const char *c_password = password
         cdef const char *c_service = service or <const char *>NULL
         cdef int c_start_time = start_time or 0
@@ -64,10 +65,13 @@ cdef class Context(object):
         if ret != 0:
             raise KrbException(self.error_message(ret))
 
+        if renew_life:
+            defs.krb5_get_init_creds_opt_set_renew_life(&opt, renew_life)
+
         with nogil:
             ret = defs.krb5_get_init_creds_password(
                 self.context, &creds, princ, c_password,
-                NULL, NULL, c_start_time, c_service, NULL
+                NULL, NULL, c_start_time, c_service, &opt
             )
         if ret != 0:
             raise KrbException(self.error_message(ret))
@@ -79,6 +83,30 @@ cdef class Context(object):
 
     def obtain_tgt_keytab(self, principal, keytab):
         pass
+
+    def renew_tgt(self, principal, CredentialsCache cache, service=None):
+        cdef Credential cred
+        cdef defs.krb5_creds creds
+        cdef defs.krb5_principal princ
+        cdef defs.krb5_ccache ccache
+        cdef const char *c_service = service or <const char *>NULL
+
+        ret = defs.krb5_parse_name(self.context, principal, &princ)
+        if ret != 0:
+            raise KrbException(self.error_message(ret))
+
+        ccache = cache.ccache
+
+        with nogil:
+            ret = defs.krb5_get_renewed_creds(self.context, &creds, princ, ccache, c_service)
+
+        if ret != 0:
+            raise KrbException(self.error_message(ret))
+
+        cred = Credential.__new__(Credential)
+        cred.context = self
+        cred.creds = creds
+        return cred
 
 
 cdef class CredentialsCache(object):
