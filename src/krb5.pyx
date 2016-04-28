@@ -29,6 +29,7 @@
 import tempfile
 from datetime import datetime
 from libc.stdlib cimport free
+from libc.stdint cimport uint32_t
 cimport defs
 
 
@@ -55,24 +56,30 @@ cdef class Context(object):
         cdef Credential cred
         cdef defs.krb5_creds creds
         cdef defs.krb5_principal princ
-        cdef defs.krb5_get_init_creds_opt opt
+        cdef defs.krb5_get_init_creds_opt *opt
         cdef const char *c_password = password
         cdef const char *c_service = service or <const char *>NULL
         cdef int c_start_time = start_time or 0
-        cdef int ret
+        cdef uint32_t ret
 
         ret = defs.krb5_parse_name(self.context, principal, &princ)
         if ret != 0:
             raise KrbException(self.error_message(ret))
 
+        ret = defs.krb5_get_init_creds_opt_alloc(self.context, &opt)
+        if ret != 0:
+            raise KrbException(self.error_message(ret))
+
         if renew_life:
-            defs.krb5_get_init_creds_opt_set_renew_life(&opt, renew_life)
+            defs.krb5_get_init_creds_opt_set_renew_life(opt, renew_life)
 
         with nogil:
             ret = defs.krb5_get_init_creds_password(
                 self.context, &creds, princ, c_password,
-                NULL, NULL, c_start_time, c_service, &opt
+                NULL, NULL, c_start_time, c_service, opt
             )
+
+            defs.krb5_get_init_creds_opt_free(self.context, opt)
         if ret != 0:
             raise KrbException(self.error_message(ret))
 
