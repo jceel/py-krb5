@@ -41,8 +41,12 @@ cdef class Context(object):
     cdef defs.krb5_context context
 
     def __init__(self):
-        if defs.krb5_init_context(&self.context) != 0:
-            raise RuntimeError()
+        ret = defs.krb5_init_context(&self.context)
+        if ret != 0:
+            raise KrbException(self.error_message(ret))
+
+    def __dealloc__(self):
+        defs.krb5_free_context(self.context)
 
     def error_message(self, code):
         cdef const char *msg;

@@ -88,6 +88,9 @@ cdef extern from "krb5.h" nogil:
     krb5_error_code krb5_init_context(
         krb5_context *)
 
+    void krb5_free_context(
+        krb5_context)
+
     const char *krb5_get_error_message(
         krb5_context,
         krb5_error_code)
