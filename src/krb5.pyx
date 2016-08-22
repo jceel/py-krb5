@@ -46,7 +46,7 @@ cdef class Context(object):
             raise KrbException(self.error_message(ret))
 
     def __dealloc__(self):
-        if self.context != NULL:
+        if (<void *>self.context) != NULL:
             defs.krb5_free_context(self.context)
 
     def error_message(self, code):
