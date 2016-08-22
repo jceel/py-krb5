@@ -135,6 +135,11 @@ cdef class CredentialsCache(object):
         if ret != 0:
             raise KrbException(self.context.error_message(ret))
 
+    def __dealloc_(self):
+        ret = defs.krb5_cc_close(self.context.context, self.ccache)
+        if ret != 0:
+            raise KrbException(self.context.error_message(ret))
+
     def add(self, Credential cred):
         ret = defs.krb5_cc_initialize(self.context.context, self.ccache, <defs.krb5_principal>cred.creds.client)
         if ret != 0:

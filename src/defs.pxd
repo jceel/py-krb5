@@ -226,6 +226,10 @@ cdef extern from "krb5.h" nogil:
         krb5_context context,
         krb5_ccache * ccache)
 
+    krb5_error_code krb5_cc_close(
+        krb5_context context,
+        krb5_ccache ccache)
+
     krb5_error_code krb5_cc_new_unique(
         krb5_context,
         const char *,
