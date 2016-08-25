@@ -168,19 +168,20 @@ cdef class CredentialsCache(object):
             if ret != 0:
                 return
 
-            while True:
-                if defs.krb5_cc_next_cred(self.context.context, self.ccache, &cursor, &creds) != 0:
-                    break
+            try:
+                while True:
+                    if defs.krb5_cc_next_cred(self.context.context, self.ccache, &cursor, &creds) != 0:
+                        break
 
-                cred = Credential.__new__(Credential)
-                cred.context = self.context
-                cred.cache = self
-                cred.creds = creds
-                yield cred
-
-            ret = defs.krb5_cc_end_seq_get(self.context.context, self.ccache, &cursor)
-            if ret != 0:
-                raise KrbException(self.context.error_message(ret))
+                    cred = Credential.__new__(Credential)
+                    cred.context = self.context
+                    cred.cache = self
+                    cred.creds = creds
+                    yield cred
+            finally:
+                ret = defs.krb5_cc_end_seq_get(self.context.context, self.ccache, &cursor)
+                if ret != 0:
+                    raise KrbException(self.context.error_message(ret))
 
 
 cdef class Credential(object):
