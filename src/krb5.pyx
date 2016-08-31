@@ -151,6 +151,11 @@ cdef class CredentialsCache(object):
         if ret != 0:
             raise KrbException(self.context.error_message(ret))
 
+    def destroy(self):
+        ret = defs.krb5_cc_destroy(self.context.context, self.ccache)
+        if ret != 0:
+            raise KrbException(self.context.error_message(ret))
+
     property principal:
         def __get__(self):
             cdef defs.krb5_principal principal

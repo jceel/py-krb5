@@ -305,3 +305,7 @@ cdef extern from "krb5.h" nogil:
         krb5_context context,
         krb5_ccache cache,
         krb5_principal principal)
+
+    krb5_error_code krb5_cc_destroy(
+        krb5_context context,
+        krb5_ccache cache)
