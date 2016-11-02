@@ -85,6 +85,7 @@ cdef class Context(object):
             )
 
             defs.krb5_get_init_creds_opt_free(self.context, opt)
+
         if ret != 0:
             raise KrbException(self.error_message(ret))
 
@@ -93,8 +94,42 @@ cdef class Context(object):
         cred.creds = creds
         return cred
 
-    def obtain_tgt_keytab(self, principal, keytab):
-        pass
+    def obtain_tgt_keytab(self, principal, Keytab keytab, start_time=None, service=None, renew_life=None):
+        cdef Credential cred
+        cdef defs.krb5_principal princ
+        cdef defs.krb5_creds creds
+        cdef defs.krb5_keytab ktab = keytab.keytab
+        cdef defs.krb5_get_init_creds_opt *opt
+        cdef const char *c_service = service or <const char *>NULL
+        cdef int c_start_time = start_time or 0
+        cdef uint32_t ret
+
+        ret = defs.krb5_parse_name(self.context, principal, &princ)
+        if ret != 0:
+            raise KrbException(self.error_message(ret))
+
+        ret = defs.krb5_get_init_creds_opt_alloc(self.context, &opt)
+        if ret != 0:
+            raise KrbException(self.error_message(ret))
+
+        if renew_life:
+            defs.krb5_get_init_creds_opt_set_renew_life(opt, renew_life)
+
+        with nogil:
+            ret = defs.krb5_get_init_creds_keytab(
+                self.context, &creds, princ, ktab, c_start_time,
+                c_service, opt
+            )
+
+            defs.krb5_get_init_creds_opt_free(self.context, opt)
+
+        if ret != 0:
+            raise KrbException(self.error_message(ret))
+
+        cred = Credential.__new__(Credential)
+        cred.context = self
+        cred.creds = creds
+        return cred
 
     def renew_tgt(self, principal, CredentialsCache cache, service=None):
         cdef Credential cred
